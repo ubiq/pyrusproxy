@@ -118,7 +118,7 @@ app.use(helmet());
 
 app.use(logger); // Here you add your logger to the stack.
 
-app.all('/', function(req, res) {
+app.all('/ubq', function(req, res) {
   handleRequest(req, res);
 });
 
