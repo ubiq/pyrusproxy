@@ -1,0 +1,27 @@
+{
+  "name": "pyrusproxy",
+  "version": "1.0.0",
+  "description": "proxy for pryus node",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ubiq/pyrusproxy.git"
+  },
+  "author": "Luke Williams",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ubiq/pyrusproxy/issues"
+  },
+  "homepage": "https://github.com/ubiq/pyrus_proxy#readme",
+  "dependencies": {
+    "bignumber.js": "^4.0.2",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "express-http-proxy": "^1.0.3",
+    "helmet": "^3.6.0",
+    "web3": "^0.19.0"
+  }
+}
