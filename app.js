@@ -100,7 +100,7 @@ var handleRequest = function(req, res) {
           res.json({
             jsonrpc: '2.0',
             error: true,
-            msg: 'invalid method: ' + req.body.method
+            msg: 'invalid method: ' + req.body.method,
             id: req.body.id
           });
       }
