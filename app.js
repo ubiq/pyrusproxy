@@ -36,8 +36,6 @@ var handleRequest = function(req, res) {
       res.status(400).send();
     } else if (Array.isArray(req.body)){
       //txdata
-      res.header('Access-Control-Allow-Origin', '*');
-    	res.header('Content-Type', 'application/json');
       res.json([{
         // balance
         jsonrpc: '2.0',
@@ -57,8 +55,6 @@ var handleRequest = function(req, res) {
     } else if (!req.body.method) {
       res.status(400).send();
     } else {
-      res.header('Access-Control-Allow-Origin', '*');
-    	res.header('Content-Type', 'application/json');
       switch (req.body.method) {
         case 'eth_blockNumber':
           res.json({
@@ -118,7 +114,7 @@ app.use(helmet());
 
 app.use(logger); // Here you add your logger to the stack.
 
-app.all('/ubq', function(req, res) {
+app.all('/', function(req, res) {
   handleRequest(req, res);
 });
 
