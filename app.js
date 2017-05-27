@@ -63,7 +63,7 @@ var handleRequest = function(req, res) {
         case 'eth_blockNumber':
           res.json({
 					  jsonrpc: '2.0',
-					  result: new BigNumber(web3.eth.blockNumber),
+					  result: web3.toHex(web3.eth.blockNumber),
             id: req.body.id
           });
           break;
