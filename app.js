@@ -56,6 +56,13 @@ var handleRequest = function(req, res) {
       res.status(400).send();
     } else {
       switch (req.body.method) {
+        case 'eth_getBlockByNumber':
+          res.json({
+					  jsonrpc: '2.0',
+					  result: web3.eth.getBlock(req.body.params[0], req.body.params[1]),
+            id: req.body.id
+          });
+          break;
         case 'eth_blockNumber':
           res.json({
 					  jsonrpc: '2.0',
