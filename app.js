@@ -57,7 +57,7 @@ var handleRequest = function(req, res) {
     } else {
       switch (req.body.method) {
         case 'eth_getBlockByNumber':
-          if (req.body.params[0] == 'latest' || req.body.params[0] == 'pending' req.body.params[0] == 'earliest') {
+          if (req.body.params[0] == 'latest' || req.body.params[0] == 'pending' || req.body.params[0] == 'earliest') {
             res.json({
   					  jsonrpc: '2.0',
   					  result: web3.eth.getBlock(req.body.params[0], req.body.params[1]),
