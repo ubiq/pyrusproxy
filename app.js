@@ -57,9 +57,38 @@ var handleRequest = function(req, res) {
     } else {
       switch (req.body.method) {
         case 'eth_getBlockByNumber':
+          if (req.body.params[0] == 'latest' || req.body.params[0] == 'pending' req.body.params[0] == 'earliest') {
+            res.json({
+  					  jsonrpc: '2.0',
+  					  result: web3.eth.getBlock(req.body.params[0], req.body.params[1]),
+              id: req.body.id
+            });
+          } else {
+            res.json({
+  					  jsonrpc: '2.0',
+  					  result: web3.eth.getBlock(web3.toDecimal(req.body.params[0]), req.body.params[1]),
+              id: req.body.id
+            });
+          }
+          break;
+        case 'eth_getCode':
           res.json({
-					  jsonrpc: '2.0',
-					  result: web3.eth.getBlock(req.body.params[0], req.body.params[1]),
+            jsonrpc: '2.0',
+            result: web3.eth.getCode(req.body.params[0], req.body.params[1]),
+            id: req.body.id
+          });
+          break;
+        case 'eth_getTransactionCount':
+          res.json({
+            jsonrpc: '2.0',
+            result: web3.eth.getTransactionCount(req.body.params[0], req.body.params[1]),
+            id: req.body.id
+          });
+          break;
+        case 'net_version':
+          res.json({
+            jsonrpc: '2.0',
+            result: web3.version.network,
             id: req.body.id
           });
           break;
