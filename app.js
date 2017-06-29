@@ -128,6 +128,13 @@ var handleRequest = function(req, res) {
             id: req.body.id
           });
           break;
+        case 'eth_gasPrice':
+          res.json({
+            jsonrpc: '2.0',
+					  result: web3.toHex(web3.eth.gasPrice),
+            id: req.body.id
+          });
+          break;
         default:
           res.json({
             jsonrpc: '2.0',
