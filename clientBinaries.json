@@ -1,0 +1,6 @@
+{
+  "version": "1.5.12",
+  "url": "https://github.com/ubiq/go-ubiq/releases/download/v1.5.12/gubiq-linux-amd64",
+  "md5": "edff553e0f2e7e53ff5b2652cf031fcb",
+  "sanity": [ "Gubiq", "Version: 1.5.12-flux"]
+}

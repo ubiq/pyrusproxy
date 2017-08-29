@@ -3,12 +3,16 @@
 var app = require('express')();
 var bodyParser = require('body-parser');
 var helmet = require('helmet');
+var nanotimer = require('nanotimer');
+var fs = require('fs');
+var objectAssign = require('object-assign');
 
-var Web3 = require('web3');
-var BigNumber = require('bignumber.js');
+var Nodeman = require('./lib/nodemanager');
+var Response = require('./lib/response');
+var Loop = require('./lib/loop');
 
-var web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8588'));
 var port = 8888;
+var web3Timer = new nanotimer();
 
 var logger = function(req, res, next) {
   console.log(new Date().toString().split(' ')[4], req.headers['user-agent']);
@@ -20,134 +24,100 @@ var formatAddress = function(addr) {
 	return "0x" + addr;
 }
 
+var standardResponse = function(res, obj, id) {
+  res.json(
+    objectAssign({
+      jsonrpc: '2.0',
+      id: id
+    }, obj)
+  );
+}
+
+var handleMethod = function(res, method, params) {
+  switch (method) {
+    case 'eth_blockNumber':
+      return {result: Response.blockNumber()};
+      break;
+    case 'eth_getBalance':
+      return {
+        address: formatAddress(params[0]),
+        result: Response.getBalance(params[0]),
+      };
+      break;
+    case 'eth_call':
+      return {result: Response.ethCall(params[0])};
+      break;
+    case 'eth_sendRawTransaction':
+      return {result: Response.sendRawTransaction(params[0])};
+      break;
+    case 'eth_estimateGas':
+      return {result: Response.getEstimatedGas(params[0])};
+      break;
+    case 'eth_gasPrice':
+      return {result: Response.gasPrice()};
+      break;
+    default:
+      return {
+        error: true,
+        msg: 'invalid method: ' + method
+      };
+  }
+}
+
 var handleRequest = function(req, res) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Content-Type', 'application/json');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type');
+  res.header('Access-Control-Max-Age', 1728000);
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', '*');
-  	res.header('Content-Type', 'application/json');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type');
-    res.header('Access-Control-Max-Age', 1728000);
-    res.header('Content-Type', 'text/plain charset=UTF-8');
     res.header('Content-Length', 0);
     res.status(200).send();
   } else if (req.method === 'POST'){
     if (!req.body) {
       res.status(400).send();
     } else if (Array.isArray(req.body)){
-      //txdata
-      res.json([{
-        // balance
-        jsonrpc: '2.0',
-        result: web3.toHex(web3.eth.getBalance(req.body[0].params[0], 'pending')),
-        id: req.body[0].id
-      },{
-        // gas price
-        jsonrpc: '2.0',
-        result: web3.toHex(web3.eth.gasPrice),
-        id: req.body[1].id
-      },{
-        // nonce
-        jsonrpc: '2.0',
-        result: web3.toHex(web3.eth.getTransactionCount(req.body[0].params[0], 'pending')),
-        id: req.body[2].id
-      }]);
+      var multiResponse = [];
+      Loop(req.body.length, function(loop){
+        var i = loop.iteration();
+        multiResponse.push(
+          objectAssign({
+            jsonrpc: '2.0',
+            id: req.body[i].id
+          }, handleMethod(res, req.body[i].method, req.body[i].params))
+        );
+        loop.next();
+      }, function(){
+        res.json(multiResponse);
+      });
     } else if (!req.body.method) {
       res.status(400).send();
     } else {
-      switch (req.body.method) {
-        case 'eth_getBlockByNumber':
-          if (req.body.params[0] == 'latest' || req.body.params[0] == 'pending' || req.body.params[0] == 'earliest') {
-            res.json({
-  					  jsonrpc: '2.0',
-  					  result: web3.eth.getBlock(req.body.params[0], req.body.params[1]),
-              id: req.body.id
-            });
-          } else {
-            res.json({
-  					  jsonrpc: '2.0',
-  					  result: web3.eth.getBlock(web3.toDecimal(req.body.params[0]), req.body.params[1]),
-              id: req.body.id
-            });
-          }
-          break;
-        case 'eth_getCode':
-          res.json({
-            jsonrpc: '2.0',
-            result: web3.eth.getCode(req.body.params[0], req.body.params[1]),
-            id: req.body.id
-          });
-          break;
-        case 'eth_getTransactionCount':
-          res.json({
-            jsonrpc: '2.0',
-            result: web3.eth.getTransactionCount(req.body.params[0], req.body.params[1]),
-            id: req.body.id
-          });
-          break;
-        case 'net_version':
-          res.json({
-            jsonrpc: '2.0',
-            result: web3.version.network,
-            id: req.body.id
-          });
-          break;
-        case 'eth_blockNumber':
-          res.json({
-					  jsonrpc: '2.0',
-					  result: web3.toHex(web3.eth.blockNumber),
-            id: req.body.id
-          });
-          break;
-        case 'eth_getBalance':
-          res.json({
-            jsonrpc: '2.0',
-					  address: formatAddress(req.body.params[0]),
-					  result: new BigNumber(web3.eth.getBalance(req.body.params[0], 'pending')),
-            id: req.body.id
-          });
-          break;
-        case 'eth_call':
-          res.json({
-            jsonrpc: '2.0',
-					  result: web3.eth.call(req.body.params[0]),
-            id: req.body.id
-          });
-          break;
-        case 'eth_sendRawTransaction':
-          res.json({
-            jsonrpc: '2.0',
-					  result: web3.eth.sendRawTransaction(req.body.params[0]),
-            id: req.body.id
-          });
-          break;
-        case 'eth_estimateGas':
-          res.json({
-            jsonrpc: '2.0',
-					  result: web3.eth.estimateGas(req.body.params[0]),
-            id: req.body.id
-          });
-          break;
-        case 'eth_gasPrice':
-          res.json({
-            jsonrpc: '2.0',
-					  result: web3.toHex(web3.eth.gasPrice),
-            id: req.body.id
-          });
-          break;
-        default:
-          res.json({
-            jsonrpc: '2.0',
-            error: true,
-            msg: 'invalid method: ' + req.body.method,
-            id: req.body.id
-          });
-      }
+      standardResponse(res, handleMethod(res, req.body.method, req.body.params), req.body.id);
     }
   } else {
     res.status(400).send();
   }
 }
+
+var checkProvider = function() {
+  if (!Response.web3.isConnected()) {
+    if (fs.existsSync('./bin/gubiq')) {
+      Nodeman.startGubiq(function(){
+        return;
+      });
+    } else {
+      Nodeman.downloadGubiq(function(){
+        return;
+      });
+    }
+  } else {
+    return;
+  }
+}
+
+web3Timer.setInterval(checkProvider, '', '10s');
 
 app.use(bodyParser.urlencoded({
 	extended: true
