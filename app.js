@@ -56,6 +56,9 @@ var handleMethod = function(res, method, params) {
     case 'eth_gasPrice':
       return {result: Response.gasPrice()};
       break;
+    case 'eth_getTransactionCount':
+      return {result: Response.nonce(params[0])};
+      break;
     default:
       return {
         error: true,
