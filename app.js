@@ -7,7 +7,6 @@ var nanotimer = require('nanotimer');
 var fs = require('fs');
 var objectAssign = require('object-assign');
 
-var Nodeman = require('./lib/nodemanager');
 var Response = require('./lib/response');
 var Loop = require('./lib/loop');
 
@@ -103,24 +102,6 @@ var handleRequest = function(req, res) {
     res.status(400).send();
   }
 }
-
-var checkProvider = function() {
-  if (!Response.web3.isConnected()) {
-    if (fs.existsSync('./bin/gubiq')) {
-      Nodeman.startGubiq(function(){
-        return;
-      });
-    } else {
-      Nodeman.downloadGubiq(function(){
-        return;
-      });
-    }
-  } else {
-    return;
-  }
-}
-
-web3Timer.setInterval(checkProvider, '', '10s');
 
 app.use(bodyParser.urlencoded({
 	extended: true
