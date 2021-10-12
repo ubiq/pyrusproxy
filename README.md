@@ -5,7 +5,7 @@ Proxy/node for [https://pyrus.ubiqsmart.com](https://pyrus.ubiqsmart.com) nodes.
 ### Install
 
 ```
-npm install
+yarn install
 ```
 
 ### Requires
